@@ -1,0 +1,1 @@
+VertexLitGeneric{$basetexture tttfof/weapons/v_hands $bumpmap tttfof/weapons/v_hands_n $halflambert 1 $nodecal 1 $model 1 $phong 1 $phongboost .01 $phongexponent .5 $phongfresnelranges"[3 5 8]"$rimlight 1 $rimlightexponent .01 $rimlightboost .03}
