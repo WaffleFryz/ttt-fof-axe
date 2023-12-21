@@ -1,0 +1,21 @@
+sound.Add({
+	name="Axe.Hit",
+	channel=CHAN_WEAPON,
+	volume=1,
+	level=75,
+	pitch=100,
+	sound={
+	  "weapons/axe/axe_hit1.wav",
+	  "weapons/axe/axe_hit2.wav",
+	  "weapons/axe/axe_hit3.wav"
+	}
+})
+
+sound.Add({
+	name="Axe.Throw",
+	channel=CHAN_STATIC,
+	volume=1,
+	level=75,
+	pitch=100,
+	sound="weapons/axe/axe_throw.wav"
+})
