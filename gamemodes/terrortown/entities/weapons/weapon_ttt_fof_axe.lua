@@ -43,7 +43,7 @@ if CLIENT then
    SWEP.ViewModelFlip        = false
    SWEP.ViewModelFOV         = 54
 
-   SWEP.Icon                 = "vgui/ttt/icon_cbar"
+   SWEP.Icon                 = "vgui/ttt/axe/ic_axe"
 end
 
 SWEP.Base                    = "weapon_tttbase"

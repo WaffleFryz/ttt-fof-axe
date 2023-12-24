@@ -30,7 +30,7 @@ if not EQUIP_DUSTERS then
 	local dusters = {
 		id = EQUIP_DUSTERS,
 		type = "item_passive",
-		material = "!ttt_fof_icons/weapon_ttt_fof_boots",
+		material = "vgui/ttt/brassknuckles/ic_brassknuckles",
 		name = "Brass Knuckles",
 		desc = "Makes you chuckle",
 	}
@@ -49,7 +49,7 @@ if CLIENT then
    SWEP.ViewModelFlip        = false
    SWEP.ViewModelFOV         = 54
 
-   SWEP.Icon                 = "vgui/ttt/icon_cbar"
+   SWEP.Icon                 = "vgui/ttt/brassknuckles/ic_brassknuckles"
 end
 
 SWEP.Base                    = "weapon_tttbase"
