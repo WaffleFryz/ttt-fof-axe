@@ -363,6 +363,7 @@ function SWEP:SecondaryAttack()
                ply:Give("weapon_ttt_fof_fists")
                ply:SelectWeapon("weapon_ttt_fof_fists")
             end
+            ply:SetAnimation( PLAYER_ATTACK1 )
          end
       end
    end

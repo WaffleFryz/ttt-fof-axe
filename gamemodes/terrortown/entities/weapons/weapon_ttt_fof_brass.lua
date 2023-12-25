@@ -189,15 +189,13 @@ function SWEP:PrimaryAttack()
 
          hitEnt:DispatchTraceAttack(dmg, spos + (self:GetOwner():GetAimVector() * 3), sdest)
 
-         local wep = hitEnt:GetActiveWeapon() 
+         local wep = hitEnt:IsPlayer() and hitEnt:GetActiveWeapon() or nil 
 
-         if hitEnt:IsPlayer() and wep.AllowDrop then
-            print(disarm)
+         if IsValid(wep) and wep.AllowDrop then
             if disarm <= ttt_fof_brass_disarm_chance:GetFloat() then
                hitEnt:SelectWeapon("weapon_ttt_unarmed")
                local vel = self:GetOwner():GetAimVector() * 300
                vel.z = vel.z + 300
-               print("pissarm")
 
                hitEnt:DropWeapon(wep, nil, vel)
 
