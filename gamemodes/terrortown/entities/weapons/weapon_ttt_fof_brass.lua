@@ -32,7 +32,7 @@ if not EQUIP_DUSTERS then
 		type = "item_passive",
 		material = "vgui/ttt/brassknuckles/ic_brassknuckles",
 		name = "Brass Knuckles",
-		desc = "Makes you chuckle",
+		desc = "Replaces Fists with Brass Knuckles. \n\nExtra damage. Random Chance to disarm on hit",
 	}
 	
 	table.insert(EquipmentItems[ROLE_TRAITOR], dusters)
