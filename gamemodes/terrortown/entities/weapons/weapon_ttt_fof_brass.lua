@@ -1,46 +1,64 @@
 AddCSLuaFile()
 
 sound.Add({
-	name="Fists.Hit",
+	name="Brass.Hit",
 	channel=CHAN_WEAPON,
 	volume=1,
 	level=75,
 	pitch=100,
 	sound={
-      "weapons/fists/fists_punch1.wav",
-      "weapons/fists/fists_punch2.wav",
-      "weapons/fists/fists_punch3.wav",
-      "weapons/fists/fists_punch4.wav"
-   }
+	  "weapons/fists/fists_punch_brass.wav",
+	  "weapons/fists/fists_punch_brass2.wav"
+	}
 })
 
-local ttt_fof_fists_damage = CreateConVar(
-	"ttt_fof_fists_damage", "25", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED,
-	"Damage of Fists PrimaryFire (Default: 25 / FoF Value: 25)"
+local ttt_fof_brass_damage = CreateConVar(
+	"ttt_fof_brass_damage", "35", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED,
+	"Damage of Brass Knuckles PrimaryFire (Default: 35 / FoF Value: 35)"
+)
+
+local ttt_fof_brass_disarm_chance = CreateConVar(
+   "ttt_fof_brass_disarm_chance", "0.5", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED,
+	"Chance of Brass Knuckles disarming. 0 = Never, 1 = Always (Default: 0.5)"
 )
 
 local ttt_fof_fists_delay = GetConVar("ttt_fof_fists_delay")
 
+if not EQUIP_DUSTERS then
+	EQUIP_DUSTERS = GenerateNewEquipmentID()
+	
+	local dusters = {
+		id = EQUIP_DUSTERS,
+		type = "item_passive",
+		material = "vgui/ttt/brassknuckles/ic_brassknuckles",
+		name = "Brass Knuckles",
+		desc = "Replaces Fists with Brass Knuckles. \n\nExtra damage. Random Chance to disarm on hit",
+	}
+	
+	table.insert(EquipmentItems[ROLE_TRAITOR], dusters)
+	table.insert(EquipmentItems[ROLE_DETECTIVE], dusters)
+end
+
 SWEP.HoldType = "fist"
 
 if CLIENT then
-   SWEP.PrintName            = "Fists"
+   SWEP.PrintName            = "Brass Knuckles"
    SWEP.Slot                 = 0
 
    SWEP.DrawCrosshair        = false
    SWEP.ViewModelFlip        = false
    SWEP.ViewModelFOV         = 54
 
-   SWEP.Icon                 = "vgui/ttt/icon_cbar"
+   SWEP.Icon                 = "vgui/ttt/brassknuckles/ic_brassknuckles"
 end
 
 SWEP.Base                    = "weapon_tttbase"
 
 SWEP.UseHands                = true
-SWEP.ViewModel               = "models/weapons/v_fists.mdl"
+SWEP.ViewModel               = "models/weapons/v_brass_knuckles.mdl"
 SWEP.WorldModel              = ""
 
-SWEP.Primary.Damage          = ttt_fof_fists_damage:GetFloat()
+SWEP.Primary.Damage          = ttt_fof_brass_damage:GetFloat()
 SWEP.Primary.ClipSize        = -1
 SWEP.Primary.DefaultClip     = -1
 SWEP.Primary.Automatic       = true
@@ -53,7 +71,7 @@ SWEP.Secondary.Delay         = 5
 SWEP.HeadshotMultiplier 	 = 1.4
 SWEP.Kind                    = WEAPON_MELEE
 SWEP.WeaponID                = AMMO_CROWBAR
-SWEP.InLoadoutFor            = {ROLE_INNOCENT, ROLE_TRAITOR, ROLE_DETECTIVE}
+SWEP.InLoadoutFor            = nil
 
 SWEP.NoSights                = true
 SWEP.IsSilent                = false
@@ -65,13 +83,18 @@ SWEP.AllowDrop               = false
 
 local sound_single = Sound("weapons/slam/throw.wav")
 
-hook.Add("TTTOrderedEquipment", "ReplaceWithBrass", function(ply, is_item, id)
-   if SERVER and id == EQUIP_DUSTERS then
-      ply:Give("weapon_ttt_fof_brass")
-   end
-end)
-
 local ttt_fof_walkspeed_crowbar = GetConVar("ttt_fof_walkspeed_crowbar")
+
+function SWEP:Equip()
+   local ply = self:GetOwner()
+   local lastActiveWep = ply:GetActiveWeapon()
+
+   ply:StripWeapon("weapon_ttt_fof_fists")
+   
+   if lastActiveWep:GetClass() == "weapon_ttt_fof_fists" then
+      ply:SelectWeapon("weapon_ttt_fof_brass")
+   end
+end
 
 function SWEP:ManipulateOwnerMoveData(ply, mv)
 	local speed = ttt_fof_walkspeed_crowbar:GetFloat()
@@ -126,7 +149,7 @@ function SWEP:PrimaryAttack()
          if hitEnt:IsPlayer() or hitEnt:GetClass() == "prop_ragdoll" then
             util.Effect("BloodImpact", edata)
 
-			   self:EmitSound("Fists.Hit")
+            self:EmitSound("Brass.Hit")
 
             -- does not work on players rah
             --util.Decal("Blood", tr_main.HitPos + tr_main.HitNormal, tr_main.HitPos - tr_main.HitNormal)
@@ -155,7 +178,7 @@ function SWEP:PrimaryAttack()
       self:GetOwner():SetAnimation( PLAYER_ATTACK1 )
 
       if hitEnt and hitEnt:IsValid() then
-
+         local disarm = math.random(1,100) / 100
          local dmg = DamageInfo()
          dmg:SetDamage(self.Primary.Damage)
          dmg:SetAttacker(self:GetOwner())
@@ -165,6 +188,19 @@ function SWEP:PrimaryAttack()
          dmg:SetDamageType(DMG_GENERIC)
 
          hitEnt:DispatchTraceAttack(dmg, spos + (self:GetOwner():GetAimVector() * 3), sdest)
+
+         local wep = hitEnt:IsPlayer() and hitEnt:GetActiveWeapon() or nil 
+
+         if IsValid(wep) and wep.AllowDrop then
+            if disarm <= ttt_fof_brass_disarm_chance:GetFloat() then
+               hitEnt:SelectWeapon("weapon_ttt_unarmed")
+               local vel = self:GetOwner():GetAimVector() * 300
+               vel.z = vel.z + 300
+
+               hitEnt:DropWeapon(wep, nil, vel)
+
+            end
+         end
 
 --         self.Weapon:SendWeaponAnim( ACT_VM_HITCENTER )         
 
@@ -191,7 +227,7 @@ function SWEP:PrimaryAttack()
 end
 
 function SWEP:SecondaryAttack()
-   self.Weapon:SetNextPrimaryFire( CurTime() + self.Primary.Delay/2)
+   self.Weapon:SetNextPrimaryFire( CurTime() + self.Primary.Delay/2 )
    self.Weapon:SetNextSecondaryFire( CurTime() + 0.1 )
 
    if self:GetOwner().LagCompensation then
@@ -217,6 +253,7 @@ function SWEP:SecondaryAttack()
 
       self.Weapon:EmitSound(sound_single)      
       self.Weapon:SendWeaponAnim( ACT_VM_HITCENTER )
+
       self.Weapon:SetNextPrimaryFire( CurTime() + self.Primary.Delay )
       self.Weapon:SetNextSecondaryFire( CurTime() + self.Secondary.Delay )
    end
@@ -270,7 +307,7 @@ function SWEP:GetViewModelPosition(pos, ang)
 end
 
 function SWEP:GetClass()
-	return "weapon_ttt_fof_fists"
+	return "weapon_ttt_fof_brass"
 end
 
 local ttt_fof_axe_glow_distance = GetConVar("ttt_fof_axe_glow_distance")
