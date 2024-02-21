@@ -19,17 +19,3 @@ sound.Add({
 	pitch=100,
 	sound="weapons/axe/axe_throw.wav"
 })
-
-sound.Add({
-	name="Fists.Miss",
-	channel=CHAN_WEAPON,
-	volume=1,
-	level=75,
-	pitch=100,
-	sound={
-      "weapons/fists/fists_miss1.wav",
-      "weapons/fists/fists_miss2.wav",
-      "weapons/fists/fists_miss3.wav",
-      "weapons/fists/fists_miss4.wav"
-   }
-})

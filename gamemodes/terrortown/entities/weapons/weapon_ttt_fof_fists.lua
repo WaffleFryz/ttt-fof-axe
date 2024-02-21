@@ -1,6 +1,20 @@
 AddCSLuaFile()
 
 sound.Add({
+	name="Fists.Miss",
+	channel=CHAN_WEAPON,
+	volume=1,
+	level=75,
+	pitch=100,
+	sound={
+      "weapons/fists/fists_miss1.wav",
+      "weapons/fists/fists_miss2.wav",
+      "weapons/fists/fists_miss3.wav",
+      "weapons/fists/fists_miss4.wav"
+   }
+})
+
+sound.Add({
 	name="Fists.Hit",
 	channel=CHAN_WEAPON,
 	volume=1,
@@ -14,12 +28,42 @@ sound.Add({
    }
 })
 
+sound.Add({
+	name="Brass.Hit",
+	channel=CHAN_WEAPON,
+	volume=1,
+	level=75,
+	pitch=100,
+	sound={
+	  "weapons/fists/fists_punch_brass.wav",
+	  "weapons/fists/fists_punch_brass2.wav"
+	}
+})
+
 local ttt_fof_fists_damage = CreateConVar(
 	"ttt_fof_fists_damage", "25", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED,
 	"Damage of Fists PrimaryFire (Default: 25 / FoF Value: 25)"
 )
 
-local ttt_fof_fists_delay = GetConVar("ttt_fof_fists_delay")
+local ttt_fof_fists_delay = CreateConVar(
+	"ttt_fof_fists_delay", "0.8", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED,
+	"Delay of Fists PrimaryFire (Default: 0.8)"
+)
+
+-- if not EQUIP_DUSTERS then
+-- 	EQUIP_DUSTERS = GenerateNewEquipmentID()
+	
+-- 	local boots = {
+-- 		id = EQUIP_DUSTERS,
+-- 		type = "item_passive",
+-- 		material = "!ttt_fof_icons/weapon_ttt_fof_boots",
+-- 		name = "Brass Knuckles",
+-- 		desc = "Makes you chuckle",
+-- 	}
+	
+-- 	table.insert(EquipmentItems[ROLE_TRAITOR], boots)
+-- 	table.insert(EquipmentItems[ROLE_DETECTIVE], boots)
+-- end
 
 SWEP.HoldType = "fist"
 
@@ -48,7 +92,6 @@ SWEP.Primary.Delay           = ttt_fof_fists_delay:GetFloat()
 SWEP.Primary.Ammo            = "none"
 
 SWEP.Secondary.Automatic       = true
-SWEP.Secondary.Delay         = 5
 
 SWEP.HeadshotMultiplier 	 = 1.4
 SWEP.Kind                    = WEAPON_MELEE
@@ -65,13 +108,11 @@ SWEP.AllowDrop               = false
 
 local sound_single = Sound("weapons/slam/throw.wav")
 
-hook.Add("TTTOrderedEquipment", "ReplaceWithBrass", function(ply, is_item, id)
-   if SERVER and id == EQUIP_DUSTERS then
-      ply:Give("weapon_ttt_fof_brass")
-   end
-end)
-
-local ttt_fof_walkspeed_crowbar = GetConVar("ttt_fof_walkspeed_crowbar")
+-- Copied movement speed from axe
+local ttt_fof_walkspeed_crowbar = CreateConVar(
+	"ttt_fof_walkspeed_crowbar", "235", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED,
+	"Walking speed while crowbar is held (recommended: 235)"
+)
 
 function SWEP:ManipulateOwnerMoveData(ply, mv)
 	local speed = ttt_fof_walkspeed_crowbar:GetFloat()
@@ -127,6 +168,11 @@ function SWEP:PrimaryAttack()
             util.Effect("BloodImpact", edata)
 
 			   self:EmitSound("Fists.Hit")
+            -- if self:GetOwner():HasEquipmentItem(EQUIP_DUSTERS) then
+            --    self:EmitSound("Brass.Hit")
+            -- else
+            --    self:EmitSound("Fists.Hit")
+            -- end
 
             -- does not work on players rah
             --util.Decal("Blood", tr_main.HitPos + tr_main.HitNormal, tr_main.HitPos - tr_main.HitNormal)
@@ -162,7 +208,7 @@ function SWEP:PrimaryAttack()
          dmg:SetInflictor(self.Weapon)
          dmg:SetDamageForce(self:GetOwner():GetAimVector() * 1500)
          dmg:SetDamagePosition(self:GetOwner():GetPos())
-         dmg:SetDamageType(DMG_GENERIC)
+         dmg:SetDamageType(DMG_SLASH)
 
          hitEnt:DispatchTraceAttack(dmg, spos + (self:GetOwner():GetAimVector() * 3), sdest)
 
@@ -191,39 +237,7 @@ function SWEP:PrimaryAttack()
 end
 
 function SWEP:SecondaryAttack()
-   self.Weapon:SetNextPrimaryFire( CurTime() + self.Primary.Delay/2)
-   self.Weapon:SetNextSecondaryFire( CurTime() + 0.1 )
-
-   if self:GetOwner().LagCompensation then
-      self:GetOwner():LagCompensation(true)
-   end
-
-   local tr = self:GetOwner():GetEyeTrace(MASK_SHOT)
-
-   if tr.Hit and IsValid(tr.Entity) and tr.Entity:IsPlayer() and (self:GetOwner():EyePos() - tr.HitPos):Length() < 100 then
-      local ply = tr.Entity
-
-      if SERVER and (not ply:IsFrozen()) then
-         local pushvel = tr.Normal * GetConVar("ttt_crowbar_pushforce"):GetFloat()
-
-         -- limit the upward force to prevent launching
-         pushvel.z = math.Clamp(pushvel.z, 50, 100)
-
-         ply:SetVelocity(ply:GetVelocity() + pushvel)
-         self:GetOwner():SetAnimation( PLAYER_ATTACK1 )
-
-         ply.was_pushed = {att=self:GetOwner(), t=CurTime(), wep=self:GetClass()} --, infl=self}
-      end
-
-      self.Weapon:EmitSound(sound_single)      
-      self.Weapon:SendWeaponAnim( ACT_VM_HITCENTER )
-      self.Weapon:SetNextPrimaryFire( CurTime() + self.Primary.Delay )
-      self.Weapon:SetNextSecondaryFire( CurTime() + self.Secondary.Delay )
-   end
-   
-   if self:GetOwner().LagCompensation then
-      self:GetOwner():LagCompensation(false)
-   end
+   self:PrimaryAttack()
 end
 
 local host_timescale = GetConVar("host_timescale")
@@ -273,7 +287,10 @@ function SWEP:GetClass()
 	return "weapon_ttt_fof_fists"
 end
 
-local ttt_fof_axe_glow_distance = GetConVar("ttt_fof_axe_glow_distance")
+local ttt_fof_axe_glow_distance = CreateConVar(
+	"ttt_fof_axe_glow_distance", "200", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED,
+	"Max distance pickup-able axes glow (Default: 200)"
+)
 
 function SWEP:Think()
    if CLIENT then
@@ -281,11 +298,13 @@ function SWEP:Think()
 
       local function getNearbyAxes()
          axes = {}
-         for i, ent in ipairs(ents.FindByClass("weapon_ttt_fof_axe")) do
-            if not ply:HasWeapon("weapon_ttt_fof_axe")   -- ply no have axe
-               and not ent:GetOwner():IsPlayer()         -- not owned by a player
-               and ply:GetPos():Distance(ent:GetPos()) <= ttt_fof_axe_glow_distance:GetFloat() then 
-                  table.insert(axes, ent)
+         for i, ent in ipairs(ents.GetAll()) do
+            if (ent:GetClass() == "weapon_ttt_fof_axe"      -- is an axe
+              and not ply:HasWeapon("weapon_ttt_fof_axe")   -- ply no have axe
+              and not ent:GetOwner():IsPlayer()) then 
+                  if ply:GetPos():Distance(ent:GetPos()) <= ttt_fof_axe_glow_distance:GetFloat() then
+                     table.insert(axes, ent)
+                  end
             end
          end
          return axes

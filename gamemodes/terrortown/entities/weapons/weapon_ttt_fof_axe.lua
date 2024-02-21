@@ -43,7 +43,7 @@ if CLIENT then
    SWEP.ViewModelFlip        = false
    SWEP.ViewModelFOV         = 54
 
-   SWEP.Icon                 = "vgui/ttt/axe/ic_axe"
+   SWEP.Icon                 = "vgui/ttt/icon_cbar"
 end
 
 SWEP.Base                    = "weapon_tttbase"
@@ -80,7 +80,7 @@ SWEP.Weight                  = 5
 SWEP.AutoSpawnable           = false
 
 SWEP.AllowDelete             = false -- never removed for weapon reduction
-SWEP.AllowDrop               = false
+SWEP.AllowDrop               = true
 
 local sound_single = Sound("Weapon_Crowbar.Single")
 local sound_open = Sound("DoorHandles.Unlocked3")
@@ -90,7 +90,10 @@ if SERVER then
    CreateConVar("ttt_crowbar_pushforce", "395", FCVAR_NOTIFY)
 end
 
-local ttt_fof_walkspeed_crowbar = GetConVar("ttt_fof_walkspeed_crowbar")
+local ttt_fof_walkspeed_crowbar = CreateConVar(
+	"ttt_fof_walkspeed_crowbar", "235", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED,
+	"Walking speed while crowbar is held (recommended: 235)"
+)
 
 function SWEP:ManipulateOwnerMoveData(ply, mv)
 	local speed = ttt_fof_walkspeed_crowbar:GetFloat()
@@ -179,12 +182,10 @@ end
 -- Swap out the fists for axe
 function SWEP:Equip(ply)
    local active_wep = ply:GetActiveWeapon()
-   if IsValid(active_wep) and 
-   (active_wep:GetClass() == "weapon_ttt_fof_fists" or active_wep:GetClass() == "weapon_ttt_fof_brass") then
+   if IsValid(active_wep) and active_wep:GetClass() == "weapon_ttt_fof_fists" then
       ply:SelectWeapon("weapon_ttt_fof_axe")  
    end
    ply:StripWeapon("weapon_ttt_fof_fists")
-   ply:StripWeapon("weapon_ttt_fof_brass")
 end
 
 function SWEP:PrimaryAttack()
@@ -356,14 +357,8 @@ function SWEP:SecondaryAttack()
             AxePhys:SetVelocity(ply:GetAimVector() * 1200)
             AxePhys:Wake()
             ply:StripWeapon("weapon_ttt_fof_axe")
-            if ply:HasEquipment(EQUIP_DUSTERS) then
-               ply:Give("weapon_ttt_fof_brass")
-               ply:SelectWeapon("weapon_ttt_fof_brass")
-            else 
-               ply:Give("weapon_ttt_fof_fists")
-               ply:SelectWeapon("weapon_ttt_fof_fists")
-            end
-            ply:SetAnimation( PLAYER_ATTACK1 )
+            ply:Give("weapon_ttt_fof_fists")
+            ply:SelectWeapon("weapon_ttt_fof_fists")
          end
       end
    end
