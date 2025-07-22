@@ -1,20 +1,6 @@
 AddCSLuaFile()
 
 sound.Add({
-	name="Fists.Miss",
-	channel=CHAN_WEAPON,
-	volume=1,
-	level=75,
-	pitch=100,
-	sound={
-      "weapons/fists/fists_miss1.wav",
-      "weapons/fists/fists_miss2.wav",
-      "weapons/fists/fists_miss3.wav",
-      "weapons/fists/fists_miss4.wav"
-   }
-})
-
-sound.Add({
 	name="Fists.Hit",
 	channel=CHAN_WEAPON,
 	volume=1,
@@ -28,42 +14,12 @@ sound.Add({
    }
 })
 
-sound.Add({
-	name="Brass.Hit",
-	channel=CHAN_WEAPON,
-	volume=1,
-	level=75,
-	pitch=100,
-	sound={
-	  "weapons/fists/fists_punch_brass.wav",
-	  "weapons/fists/fists_punch_brass2.wav"
-	}
-})
-
 local ttt_fof_fists_damage = CreateConVar(
 	"ttt_fof_fists_damage", "25", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED,
 	"Damage of Fists PrimaryFire (Default: 25 / FoF Value: 25)"
 )
 
-local ttt_fof_fists_delay = CreateConVar(
-	"ttt_fof_fists_delay", "0.8", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED,
-	"Delay of Fists PrimaryFire (Default: 0.8)"
-)
-
--- if not EQUIP_DUSTERS then
--- 	EQUIP_DUSTERS = GenerateNewEquipmentID()
-	
--- 	local boots = {
--- 		id = EQUIP_DUSTERS,
--- 		type = "item_passive",
--- 		material = "!ttt_fof_icons/weapon_ttt_fof_boots",
--- 		name = "Brass Knuckles",
--- 		desc = "Makes you chuckle",
--- 	}
-	
--- 	table.insert(EquipmentItems[ROLE_TRAITOR], boots)
--- 	table.insert(EquipmentItems[ROLE_DETECTIVE], boots)
--- end
+local ttt_fof_fists_delay = GetConVar("ttt_fof_fists_delay")
 
 SWEP.HoldType = "fist"
 
@@ -108,11 +64,13 @@ SWEP.AllowDrop               = false
 
 local sound_single = Sound("weapons/slam/throw.wav")
 
--- Copied movement speed from axe
-local ttt_fof_walkspeed_crowbar = CreateConVar(
-	"ttt_fof_walkspeed_crowbar", "235", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED,
-	"Walking speed while crowbar is held (recommended: 235)"
-)
+hook.Add("TTTOrderedEquipment", "ReplaceWithBrass", function(ply, is_item, id)
+   if SERVER and id == EQUIP_DUSTERS then
+      ply:Give("weapon_ttt_fof_brass")
+   end
+end)
+
+local ttt_fof_walkspeed_crowbar = GetConVar("ttt_fof_walkspeed_crowbar")
 
 function SWEP:ManipulateOwnerMoveData(ply, mv)
 	local speed = ttt_fof_walkspeed_crowbar:GetFloat()
@@ -287,10 +245,7 @@ function SWEP:GetClass()
 	return "weapon_ttt_fof_fists"
 end
 
-local ttt_fof_axe_glow_distance = CreateConVar(
-	"ttt_fof_axe_glow_distance", "200", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED,
-	"Max distance pickup-able axes glow (Default: 200)"
-)
+local ttt_fof_axe_glow_distance = GetConVar("ttt_fof_axe_glow_distance")
 
 function SWEP:Think()
    if CLIENT then

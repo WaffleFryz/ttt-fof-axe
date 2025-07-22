@@ -43,7 +43,7 @@ if CLIENT then
    SWEP.ViewModelFlip        = false
    SWEP.ViewModelFOV         = 54
 
-   SWEP.Icon                 = "vgui/ttt/icon_cbar"
+   SWEP.Icon                 = "vgui/ttt/axe/ic_axe"
 end
 
 SWEP.Base                    = "weapon_tttbase"
@@ -90,10 +90,7 @@ if SERVER then
    CreateConVar("ttt_crowbar_pushforce", "395", FCVAR_NOTIFY)
 end
 
-local ttt_fof_walkspeed_crowbar = CreateConVar(
-	"ttt_fof_walkspeed_crowbar", "235", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED,
-	"Walking speed while crowbar is held (recommended: 235)"
-)
+local ttt_fof_walkspeed_crowbar = GetConVar("ttt_fof_walkspeed_crowbar")
 
 function SWEP:ManipulateOwnerMoveData(ply, mv)
 	local speed = ttt_fof_walkspeed_crowbar:GetFloat()
